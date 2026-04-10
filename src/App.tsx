@@ -18,14 +18,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ZReportData, ZReportLine, MappingEntry } from './types';
 import { DEFAULT_VARE_MAPPING } from './constants';
 import { processZReportImage } from './services/geminiService';
-import { SAMPLE_REPORTS } from './sampleData';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'details' | 'mappings' | 'history' | 'reports'>('dashboard');
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [reportData, setReportData] = useState<ZReportData | null>(null);
-  const [history, setHistory] = useState<ZReportData[]>(SAMPLE_REPORTS);
+  const [history, setHistory] = useState<ZReportData[]>([]);
   const [mappings, setMappings] = useState<MappingEntry[]>(() => {
     const saved = localStorage.getItem('kiosk_mappings');
     return saved ? JSON.parse(saved) : DEFAULT_VARE_MAPPING;
@@ -568,17 +567,8 @@ export default function App() {
 
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className={`group relative ${selectedImages.length > 0 ? 'h-48' : 'h-96'} border-2 border-dashed border-slate-200 rounded-3xl bg-white flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/30 transition-all duration-300`}
+                    className={`hidden md:flex group relative ${selectedImages.length > 0 ? 'h-48' : 'h-96'} border-2 border-dashed border-slate-200 rounded-3xl bg-white flex-col items-center justify-center gap-4 cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/30 transition-all duration-300`}
                   >
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleFileSelect} 
-                      className="hidden" 
-                      accept="image/*"
-                      multiple
-                    />
-                    
                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
                       <Plus size={24} />
                     </div>
@@ -588,8 +578,26 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* Mobile Button format for Legg til bilder */}
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`md:hidden flex w-full py-4 ${selectedImages.length === 0 ? 'bg-white border-2 border-emerald-600 text-emerald-600' : 'bg-slate-50 border-2 border-dashed border-slate-300 text-slate-500'} rounded-2xl font-bold text-lg hover:bg-emerald-50 transition-all items-center justify-center gap-3`}
+                  >
+                    <Plus size={24} />
+                    <span>{selectedImages.length > 0 ? "Legg til flere bilder" : "Legg til bilder"}</span>
+                  </button>
+
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileSelect} 
+                    className="hidden" 
+                    accept="image/*"
+                    multiple
+                  />
+
                   {selectedImages.length > 0 && (
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {selectedImages.map((img, idx) => (
                         <div key={idx} className="relative group aspect-[3/4] rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-white">
                           <img src={img} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -630,7 +638,7 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                   <StatCard 
                     title="Importerte rapporter" 
                     value={history.length.toString()} 
@@ -1243,4 +1251,6 @@ function StatusBadge({ status }: { status: 'ok' | 'warning' | 'error' }) {
     </span>
   );
 }
+
+
 
