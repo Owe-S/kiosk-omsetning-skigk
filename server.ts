@@ -4,7 +4,7 @@ import path from "path";
 import { google } from "googleapis";
 import cookieSession from "cookie-session";
 import dotenv from "dotenv";
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import fs from 'fs';
 
