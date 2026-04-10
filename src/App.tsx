@@ -26,7 +26,16 @@ export default function App() {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [reportData, setReportData] = useState<ZReportData | null>(null);
   const [history, setHistory] = useState<ZReportData[]>(SAMPLE_REPORTS);
-  const [mappings, setMappings] = useState<MappingEntry[]>(DEFAULT_VARE_MAPPING);
+  const [mappings, setMappings] = useState<MappingEntry[]>(() => {
+    const saved = localStorage.getItem('kiosk_mappings');
+    return saved ? JSON.parse(saved) : DEFAULT_VARE_MAPPING;
+  });
+
+  // Save mappings whenever they change
+  useEffect(() => {
+    localStorage.setItem('kiosk_mappings', JSON.stringify(mappings));
+  }, [mappings]);
+
   const [error, setError] = useState<string | null>(null);
   const [showImages, setShowImages] = useState(false);
   const [ansattName, setAnsattName] = useState('');
@@ -208,8 +217,19 @@ export default function App() {
     return Object.entries(aggregated).sort((a, b) => b[0].localeCompare(a[0]));
   };
 
+  const [selectedReportPeriod, setSelectedReportPeriod] = useState<string>('');
+
+  useEffect(() => {
+    if (selectedReportPeriod === '' && history.length > 0) {
+      setSelectedReportPeriod(`daily-${history[0].dato}`);
+    }
+  }, [history, selectedReportPeriod]);
+
   const [reportView, setReportView] = useState<'daily' | 'monthly'>('monthly');
   const aggregatedData = getAggregatedData(reportView);
+  
+  const dailyOptions = getAggregatedData('daily');
+  const monthlyOptions = getAggregatedData('monthly');
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -885,32 +905,43 @@ export default function App() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-8"
               >
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center flex-wrap gap-4">
                   <div>
                     <h2 className="text-2xl font-bold tracking-tight">Omsetningsrapport</h2>
                     <p className="text-slate-500">Oversikt over salg per vare og kategori.</p>
                   </div>
-                  <div className="flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-                    <button 
-                      onClick={() => setReportView('daily')}
-                      className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${reportView === 'daily' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                  <div className="w-full sm:w-auto">
+                    <select 
+                      value={selectedReportPeriod}
+                      onChange={(e) => setSelectedReportPeriod(e.target.value)}
+                      className="w-full sm:w-64 px-4 py-2.5 rounded-xl border border-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 bg-white"
                     >
-                      Daglig
-                    </button>
-                    <button 
-                      onClick={() => setReportView('monthly')}
-                      className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${reportView === 'monthly' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
-                    >
-                      Månedlig
-                    </button>
+                      <option disabled value="">Velg dato / måned...</option>
+                      <optgroup label="Månedlig">
+                        {monthlyOptions.map(([p]) => (
+                          <option key={`monthly-${p}`} value={`monthly-${p}`}>{p}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Daglig">
+                        {dailyOptions.map(([p]) => (
+                          <option key={`daily-${p}`} value={`daily-${p}`}>{p}</option>
+                        ))}
+                      </optgroup>
+                    </select>
                   </div>
                 </div>
 
-                {aggregatedData.length > 0 ? aggregatedData.map(([period, data]) => (
+                {(() => {
+                  const isDaily = selectedReportPeriod.startsWith('daily-');
+                  const dateKey = selectedReportPeriod.replace('daily-', '').replace('monthly-', '');
+                  const currentOptions = isDaily ? dailyOptions : monthlyOptions;
+                  const filtered = currentOptions.filter(([p]) => p === dateKey);
+
+                  return filtered.length > 0 ? filtered.map(([period, data]) => (
                   <div key={period} className="space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="h-px flex-1 bg-slate-200"></div>
-                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">{period}</span>
+                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">{isDaily ? 'Daglig: ' : 'Månedlig: '}{period}</span>
                       <div className="h-px flex-1 bg-slate-200"></div>
                     </div>
 
@@ -970,12 +1001,13 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                )) : (
+                  )) : (
                   <div className="h-96 flex flex-col items-center justify-center text-slate-400 gap-4">
                     <Download size={48} className="opacity-20" />
                     <p>Ingen data tilgjengelig for rapportering ennå.</p>
                   </div>
-                )}
+                  );
+                })()}
               </motion.div>
             )}
             {activeTab === 'mappings' && (
@@ -1002,21 +1034,78 @@ export default function App() {
                     <thead>
                       <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 bg-slate-50/50">
                         <th className="px-6 py-4">Tekst fra Kassa</th>
-                        <th className="px-6 py-4">Kategori</th><th className="px-6 py-4"></th>
+                        <th className="px-6 py-4">Kategori (Drift)</th>
                         <th className="px-6 py-4">Konto (Tripletex)</th>
-                        <th className="px-6 py-4">MVA</th>
-                        <th className="px-6 py-4">Handlinger</th>
+                        <th className="px-6 py-4">MVA Kode</th>
+                        <th className="px-6 py-4 text-right">Handlinger</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {mappings.map((m, i) => (
-                        <tr key={i} className="group">
-                          <td className="px-6 py-4 font-medium">{m.kassaTekst}</td>
-                          <td className="px-6 py-4">{m.driftskategori}</td>
-                          <td className="px-6 py-4 font-mono text-sm">{m.konto}</td>
-                          <td className="px-6 py-4 text-sm">{m.mva}</td>
-                          <td className="px-6 py-4">
-                            <button className="p-2 text-slate-300 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100">
+                        <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-3">
+                            <input 
+                              type="text" 
+                              value={m.kassaTekst}
+                              onChange={(e) => {
+                                const newMappings = [...mappings];
+                                newMappings[i].kassaTekst = e.target.value;
+                                setMappings(newMappings);
+                              }}
+                              className="w-full px-2 py-1 font-medium border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent"
+                              placeholder="f.eks. Kaffe"
+                            />
+                          </td>
+                          <td className="px-6 py-3">
+                            <input 
+                              type="text" 
+                              value={m.driftskategori}
+                              onChange={(e) => {
+                                const newMappings = [...mappings];
+                                newMappings[i].driftskategori = e.target.value;
+                                setMappings(newMappings);
+                              }}
+                              className="w-full px-2 py-1 bg-slate-100 rounded-md text-xs font-bold text-slate-600 uppercase border border-transparent hover:border-slate-300 focus:border-emerald-500 focus:bg-white outline-none transition-all"
+                            />
+                          </td>
+                          <td className="px-6 py-3">
+                            <input 
+                              type="text" 
+                              value={m.konto}
+                              onChange={(e) => {
+                                const newMappings = [...mappings];
+                                newMappings[i].konto = e.target.value;
+                                setMappings(newMappings);
+                              }}
+                              className="w-24 px-2 py-1 font-mono text-slate-500 text-sm border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent"
+                            />
+                          </td>
+                          <td className="px-6 py-3">
+                            <select 
+                              value={m.mva}
+                              onChange={(e) => {
+                                const newMappings = [...mappings];
+                                newMappings[i].mva = e.target.value as "Ingen" | "12% (Kode 33)" | "15% (Kode 31)" | "25% (Kode 3)";
+                                setMappings(newMappings);
+                              }}
+                              className="text-sm bg-transparent border border-transparent hover:border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 text-slate-600 transition-all"
+                            >
+                              <option value="Ingen">Ingen</option>
+                              <option value="12% (Kode 33)">12% (Kode 33)</option>
+                              <option value="15% (Kode 31)">15% (Kode 31)</option>
+                              <option value="25% (Kode 3)">25% (Kode 3)</option>
+                            </select>
+                          </td>
+                          <td className="px-6 py-3 text-right">
+                            <button 
+                              onClick={() => {
+                                const newMappings = [...mappings];
+                                newMappings.splice(i, 1);
+                                setMappings(newMappings);
+                              }}
+                              className="p-2 text-slate-300 hover:bg-red-50 hover:text-red-500 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                              title="Slett regel"
+                            >
                               <Trash2 size={18} />
                             </button>
                           </td>
@@ -1024,6 +1113,15 @@ export default function App() {
                       ))}
                     </tbody>
                   </table>
+                  <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex justify-center">
+                    <button 
+                      onClick={() => setMappings([...mappings, { kassaTekst: "Ny Regel", driftskategori: "Mangler Kat.", konto: "3000", mva: "25% (Kode 3)" }])}
+                      className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200 border-dashed"
+                    >
+                      <Plus size={16} />
+                      Legg til ny mapping-regel
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}
