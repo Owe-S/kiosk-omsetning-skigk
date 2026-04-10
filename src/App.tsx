@@ -465,7 +465,7 @@ export default function App() {
                 <CheckCircle2 size={16} />
                 <span>Systemet er klart</span>
               </div>
-              <p className="text-[10px] text-slate-400 text-right mt-1 font-mono">v2.3</p>
+              <p className="text-[10px] text-slate-400 text-right mt-1 font-mono">v2.4</p>
             </div>
           </div>
 
