@@ -1,0 +1,23 @@
+{
+  "entities": {
+    "GoogleTokens": {
+      "title": "Google OAuth Tokens",
+      "description": "Stores the master OAuth tokens for the application to access Google Drive and Sheets.",
+      "type": "object",
+      "properties": {
+        "access_token": { "type": "string" },
+        "refresh_token": { "type": "string" },
+        "scope": { "type": "string" },
+        "token_type": { "type": "string" },
+        "expiry_date": { "type": "number" }
+      },
+      "required": ["access_token", "refresh_token"]
+    }
+  },
+  "firestore": {
+    "/config/google_tokens": {
+      "schema": "GoogleTokens",
+      "description": "The single document storing the master Google OAuth tokens."
+    }
+  }
+}

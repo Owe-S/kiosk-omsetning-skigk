@@ -1,0 +1,5 @@
+﻿site_name: Ski Golfklubb - Kassa Import
+nav:
+  - Hjem: index.md
+  - Utviklingslogg: changelog.md
+theme: readthedocs

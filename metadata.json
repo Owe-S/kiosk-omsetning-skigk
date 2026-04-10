@@ -1,0 +1,7 @@
+{
+  "name": "Ski Golfklubb Kassa-import",
+  "description": "Automatisk OCR-uttrekk av Z-rapporter for Ski Golfklubb med Tripletex-mapping.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

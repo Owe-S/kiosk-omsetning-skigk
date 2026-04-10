@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: config
+    // Document ID: google_tokens
+    // Fields:
+    //   - access_token: string (required)
+    //   - refresh_token: string (required)
+    //   - scope: string
+    //   - token_type: string
+    //   - expiry_date: number
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "admin-2025@skigk.no" && request.auth.token.email_verified == true);
+    }
+
+    // Rules
+    match /config/google_tokens {
+      // Only the admin can read or write the tokens
+      allow read, write: if isAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
