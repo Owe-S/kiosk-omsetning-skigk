@@ -415,74 +415,89 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 p-6 flex flex-col gap-8 z-10">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
-            <FileText size={24} />
-          </div>
-          <h1 className="font-bold text-xl tracking-tight">Ski Golf<span className="text-emerald-600">Kassa</span></h1>
-        </div>
-
-        <nav className="flex flex-col gap-2">
-          <NavItem 
-            active={activeTab === 'dashboard'} 
-            onClick={() => setActiveTab('dashboard')}
-            icon={<Upload size={20} />}
-            label="Dashboard"
-          />
-          <NavItem 
-            active={activeTab === 'details'} 
-            onClick={() => setActiveTab('details')}
-            icon={<TableIcon size={20} />}
-            label="Dagsoppgjør"
-          />
-          <NavItem 
-            active={activeTab === 'history'} 
-            onClick={() => setActiveTab('history')}
-            icon={<History size={20} />}
-            label="Historikk"
-          />
-          <NavItem 
-            active={activeTab === 'reports'} 
-            onClick={() => setActiveTab('reports')}
-            icon={<Download size={20} />}
-            label="Rapporter"
-          />
-          <NavItem 
-            active={activeTab === 'mappings'} 
-            onClick={() => setActiveTab('mappings')}
-            icon={<Settings size={20} />}
-            label="Mappinger"
-          />
-        </nav>
-
-        <div className="mt-auto flex flex-col gap-4">
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 relative">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Status</p>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                <CheckCircle2 size={16} />
-                <span>Systemet er klart</span>
+      {/* Sidebar / Top Nav */}
+        <div className="fixed left-0 top-0 w-full md:h-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col md:gap-8 z-20">
+          <div className="flex items-center justify-between p-4 md:p-6 pb-2 md:pb-6">
+            <div className="flex items-center gap-3 px-2">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200 shrink-0">
+                <FileText className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-              <p className="text-[10px] text-slate-400 text-right mt-1 font-mono">v2.4</p>
+              <h1 className="font-bold text-lg md:text-xl tracking-tight leading-none">Ski Golf<span className="text-emerald-600 hidden md:inline">Kassa</span></h1>
+            </div>
+            
+            {/* Mobile Right Icons */}
+            <div className="flex md:hidden items-center gap-3">
+               <div className="flex items-center justify-center px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full font-semibold text-xs gap-1">
+                 <CheckCircle2 size={14} />
+                 <span>v2.4</span>
+               </div>
+               {(isGoogleAuthenticated || isKioskAuthenticated) && (
+                 <button onClick={handleGoogleLogout} className="p-2 text-red-600 bg-red-50 rounded-full" aria-label="Logg ut">
+                   <LogOut size={16} />
+                 </button>
+               )}
             </div>
           </div>
-
-          {(isGoogleAuthenticated || isKioskAuthenticated) && (
-            <button 
-              onClick={handleGoogleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-sm"
-            >
-              <LogOut size={18} />
-              Ferdig for i dag / Logg ut
-            </button>
-          )}
+  
+          <nav className="flex flex-row md:flex-col gap-1 md:gap-2 px-4 md:px-6 pb-3 md:pb-0 overflow-x-auto no-scrollbar items-center md:items-stretch">
+            <NavItem 
+              active={activeTab === 'dashboard'} 
+              onClick={() => setActiveTab('dashboard')}
+              icon={<Upload size={20} className="md:w-5 md:h-5 w-4 h-4" />}
+              label="Dashboard"
+            />
+            <NavItem 
+              active={activeTab === 'details'} 
+              onClick={() => setActiveTab('details')}
+              icon={<TableIcon size={20} className="md:w-5 md:h-5 w-4 h-4" />}
+              label="Dagsoppgjør"
+            />
+            <NavItem 
+              active={activeTab === 'history'} 
+              onClick={() => setActiveTab('history')}
+              icon={<History size={20} className="md:w-5 md:h-5 w-4 h-4" />}
+              label="Historikk"
+            />
+            <NavItem 
+              active={activeTab === 'reports'} 
+              onClick={() => setActiveTab('reports')}
+              icon={<Download size={20} className="md:w-5 md:h-5 w-4 h-4" />}
+              label="Rapporter"
+            />
+            <NavItem 
+              active={activeTab === 'mappings'} 
+              onClick={() => setActiveTab('mappings')}
+              icon={<Settings size={20} className="md:w-5 md:h-5 w-4 h-4" />}
+              label="Mappinger"
+            />
+          </nav>
+  
+          <div className="mt-auto hidden md:flex flex-col gap-4 p-6 pt-0">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 relative">
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Status</p>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
+                  <CheckCircle2 size={16} />
+                  <span>Systemet er klart</span>
+                </div>
+                <p className="text-[10px] text-slate-400 text-right mt-1 font-mono">v2.4</p>
+              </div>
+            </div>
+  
+            {(isGoogleAuthenticated || isKioskAuthenticated) && (
+              <button 
+                onClick={handleGoogleLogout}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-sm"
+              >
+                <LogOut size={18} />
+                Ferdig for i dag / Logg ut
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="pl-64 p-8">
+  
+        {/* Main Content */}
+        <main className="md:pl-64 pt-[120px] md:pt-0 p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && (
@@ -1182,7 +1197,7 @@ function NavItem({ active, onClick, icon, label }: { active: boolean, onClick: (
   return (
     <button 
       onClick={onClick}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-200 ${
+      className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 rounded-lg md:rounded-xl font-semibold text-sm md:text-base transition-all duration-200 whitespace-nowrap shrink-0 ${
         active 
           ? 'bg-emerald-50 text-emerald-700 shadow-sm' 
           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
@@ -1228,3 +1243,4 @@ function StatusBadge({ status }: { status: 'ok' | 'warning' | 'error' }) {
     </span>
   );
 }
+
