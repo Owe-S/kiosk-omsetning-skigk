@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { 
   Upload, 
   FileText, 
@@ -271,6 +271,23 @@ export default function App() {
     const totalSalg = newLinjer.reduce((acc, l) => acc + l.beloep, 0);
     const differanse = reportData.totalBetaling - totalSalg;
     
+    const updatedReport = { 
+      ...reportData, 
+      linjer: newLinjer, 
+      totalSalg,
+      differanse,
+      status: differanse === 0 ? 'ok' : 'warning' as const
+    };
+    
+    setReportData(updatedReport);
+    setHistory(prev => prev.map(r => r.dato === reportData.dato ? updatedReport : r));
+  };
+
+  const updateLineArray = (newLinjer: ZReportLine[]) => {
+    if (!reportData) return;
+    const totalSalg = newLinjer.reduce((acc, l) => acc + l.beloep, 0);
+    const differanse = reportData.totalBetaling - totalSalg;
+
     const updatedReport = { 
       ...reportData, 
       linjer: newLinjer, 
@@ -652,7 +669,7 @@ export default function App() {
                           ) : (
                             <CheckCircle2 size={18} />
                           )}
-                          Lagre til Google Sheets
+                          Godkjenn Z-rapport
                         </button>
                       </div>
                     </div>
@@ -661,7 +678,7 @@ export default function App() {
                       <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
                         <div className="flex items-center gap-3 text-emerald-800">
                           <FileText size={20} />
-                          <span className="font-medium text-sm">Rapporten er lagret i Google Sheets!</span>
+                          <span className="font-medium text-sm">Rapporten er godkjent og lagret!</span>
                         </div>
                         <a 
                           href={`https://docs.google.com/spreadsheets/d/${lastSpreadsheetId}`} 
@@ -712,19 +729,28 @@ export default function App() {
                             <th className="px-6 py-4">Beløp</th>
                             <th className="px-6 py-4">Konto</th>
                             <th className="px-6 py-4">MVA</th>
-                            <th className="px-6 py-4">Kategori</th>
+                            <th className="px-6 py-4">Kategori</th><th className="px-6 py-4"></th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                           {reportData.linjer.map((line, i) => (
-                            <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 font-medium">{line.varenavn}</td>
+                            <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
+                              <td className="px-6 py-4">
+                                <input 
+                                  type="text" 
+                                  value={line.varenavn}
+                                  onChange={(e) => updateLine(i, 'varenavn', e.target.value)}
+                                  disabled={!!lastSpreadsheetId}
+                                  className="w-full px-2 py-1 font-medium border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent disabled:opacity-75 disabled:hover:border-transparent"
+                                />
+                              </td>
                               <td className="px-6 py-4">
                                 <input 
                                   type="number" 
                                   value={line.antall}
                                   onChange={(e) => updateLine(i, 'antall', parseInt(e.target.value) || 0)}
-                                  className="w-16 px-2 py-1 border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent"
+                                  disabled={!!lastSpreadsheetId}
+                                  className="w-16 px-2 py-1 border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent disabled:opacity-75 disabled:hover:border-transparent"
                                 />
                               </td>
                               <td className="px-6 py-4 font-semibold">
@@ -733,22 +759,75 @@ export default function App() {
                                     type="number" 
                                     value={line.beloep}
                                     onChange={(e) => updateLine(i, 'beloep', parseInt(e.target.value) || 0)}
-                                    className="w-24 px-2 py-1 border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent font-semibold"
+                                    disabled={!!lastSpreadsheetId}
+                                    className="w-24 px-2 py-1 border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent font-semibold disabled:opacity-75 disabled:hover:border-transparent"
                                   />
                                   <span>kr</span>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 text-slate-500 font-mono text-sm">{line.konto}</td>
-                              <td className="px-6 py-4 text-slate-500 text-sm">{line.mvaKode}</td>
                               <td className="px-6 py-4">
-                                <span className="px-2 py-1 bg-slate-100 rounded-md text-xs font-bold text-slate-600 uppercase">
-                                  {line.varegruppe}
-                                </span>
+                                <input 
+                                  type="text" 
+                                  value={line.konto}
+                                  onChange={(e) => updateLine(i, 'konto', e.target.value)}
+                                  disabled={!!lastSpreadsheetId}
+                                  className="w-20 px-2 py-1 font-mono text-slate-500 text-sm border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent disabled:opacity-75 disabled:hover:border-transparent"
+                                />
+                              </td>
+                              <td className="px-6 py-4">
+                                <select 
+                                  value={line.mvaKode}
+                                  onChange={(e) => updateLine(i, 'mvaKode', e.target.value)}
+                                  disabled={!!lastSpreadsheetId}
+                                  className="text-sm bg-transparent border border-transparent hover:border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 text-slate-600 transition-all disabled:opacity-75 disabled:hover:border-transparent disabled:appearance-none"
+                                >
+                                  <option value="Ingen">Ingen</option>
+                                  <option value="15% (Kode 31)">15% (Kode 31)</option>
+                                  <option value="25% (Kode 3)">25% (Kode 3)</option>
+                                </select>
+                              </td>
+                              <td className="px-6 py-4">
+                                <input 
+                                  type="text" 
+                                  value={line.varegruppe}
+                                  onChange={(e) => updateLine(i, 'varegruppe', e.target.value)}
+                                  disabled={!!lastSpreadsheetId}
+                                  className="w-24 px-2 py-1 bg-slate-100 rounded-md text-xs font-bold text-slate-600 uppercase border border-transparent hover:border-slate-300 focus:border-emerald-500 focus:bg-white outline-none transition-all disabled:opacity-75 disabled:hover:border-transparent"
+                                />
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                {!lastSpreadsheetId && (
+                                  <button 
+                                    onClick={() => {
+                                      const newLine = [...reportData.linjer];
+                                      newLine.splice(i, 1);
+                                      updateLineArray(newLine);
+                                    }}
+                                    className="p-1.5 text-slate-300 hover:bg-red-50 hover:text-red-500 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                                    title="Slett varelinje"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
+                      {!lastSpreadsheetId && (
+                        <div className="p-2 border-t border-slate-100 bg-slate-50/50 flex justify-center">
+                          <button 
+                            onClick={() => {
+                              const newLinjer = [...reportData.linjer, { varenavn: "Ny varelinje", antall: 1, beloep: 0, varegruppe: "Diverse", konto: "3000", mvaKode: "25% (Kode 3)", dato: reportData.dato }];
+                              updateLineArray(newLinjer);
+                            }}
+                            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200 border-dashed"
+                          >
+                            <Plus size={16} />
+                            Legg til varelinje
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
@@ -920,7 +999,7 @@ export default function App() {
                     <thead>
                       <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 bg-slate-50/50">
                         <th className="px-6 py-4">Tekst fra Kassa</th>
-                        <th className="px-6 py-4">Kategori</th>
+                        <th className="px-6 py-4">Kategori</th><th className="px-6 py-4"></th>
                         <th className="px-6 py-4">Konto (Tripletex)</th>
                         <th className="px-6 py-4">MVA</th>
                         <th className="px-6 py-4">Handlinger</th>
