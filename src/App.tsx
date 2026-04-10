@@ -93,7 +93,7 @@ export default function App() {
         setError(data.error);
       }
     } catch (err) {
-      setError("Kunne ikke logge inn. Prøv igjen senere.");
+      setError("Kunne ikke logge inn. Prï¿½v igjen senere.");
     } finally {
       setIsLoggingIn(false);
     }
@@ -147,8 +147,8 @@ export default function App() {
 
   const handleTripletexExport = () => {
     if (!reportData) return;
-    // Tripletex standard CSV format: Dato, Konto, Beløp, MVA-kode, Beskrivelse
-    const headers = ["Dato", "Konto", "Beløp", "MVA-kode", "Beskrivelse"];
+    // Tripletex standard CSV format: Dato, Konto, Belï¿½p, MVA-kode, Beskrivelse
+    const headers = ["Dato", "Konto", "Belï¿½p", "MVA-kode", "Beskrivelse"];
     const rows = reportData.linjer.map(l => [
       reportData.dato,
       l.konto,
@@ -265,7 +265,7 @@ export default function App() {
       setSelectedImages([]);
     } catch (err) {
       console.error("Error processing images:", err);
-      setError("Kunne ikke analysere bildene. Vennligst prøv igjen med tydeligere bilder.");
+      setError("Kunne ikke analysere bildene. Vennligst prï¿½v igjen med tydeligere bilder.");
     } finally {
       setIsUploading(false);
     }
@@ -321,7 +321,7 @@ export default function App() {
 
   const exportToCSV = () => {
     if (!reportData) return;
-    const headers = ["Dato", "Varenavn", "Antall", "Beløp", "Varegruppe", "Konto", "MVA-kode"];
+    const headers = ["Dato", "Varenavn", "Antall", "Belï¿½p", "Varegruppe", "Konto", "MVA-kode"];
     const rows = reportData.linjer.map(l => [
       reportData.dato,
       l.varenavn,
@@ -353,9 +353,9 @@ export default function App() {
               <FileText size={32} />
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">
-              Oppgjør - Kiosken,<br />Ski Golfklubb
+              Oppgjï¿½r - Kiosken,<br />Ski Golfklubb
             </h1>
-            <p className="mt-2 text-slate-500">Logg inn for å starte dagsoppgjøret</p>
+            <p className="mt-2 text-slate-500">Logg inn for ï¿½ starte dagsoppgjï¿½ret</p>
           </div>
 
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
@@ -428,7 +428,7 @@ export default function App() {
             <div className="flex md:hidden items-center gap-3">
                <div className="flex items-center justify-center px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full font-semibold text-xs gap-1">
                  <CheckCircle2 size={14} />
-                 <span>v2.4</span>
+                 <span>v2.5</span>
                </div>
                {(isGoogleAuthenticated || isKioskAuthenticated) && (
                  <button onClick={handleGoogleLogout} className="p-2 text-red-600 bg-red-50 rounded-full" aria-label="Logg ut">
@@ -449,7 +449,7 @@ export default function App() {
               active={activeTab === 'details'} 
               onClick={() => setActiveTab('details')}
               icon={<TableIcon size={20} className="md:w-5 md:h-5 w-4 h-4" />}
-              label="Dagsoppgjør"
+              label="Dagsoppgjï¿½r"
             />
             <NavItem 
               active={activeTab === 'history'} 
@@ -463,12 +463,14 @@ export default function App() {
               icon={<Download size={20} className="md:w-5 md:h-5 w-4 h-4" />}
               label="Rapporter"
             />
-            <NavItem 
-              active={activeTab === 'mappings'} 
-              onClick={() => setActiveTab('mappings')}
-              icon={<Settings size={20} className="md:w-5 md:h-5 w-4 h-4" />}
-              label="Mappinger"
-            />
+            {isGoogleAuthenticated && (
+              <NavItem 
+                active={activeTab === 'mappings'} 
+                onClick={() => setActiveTab('mappings')}
+                icon={<Settings size={20} className="md:w-5 md:h-5 w-4 h-4" />}
+                label="Mappinger"
+              />
+            )}
           </nav>
   
           <div className="mt-auto hidden md:flex flex-col gap-4 p-6 pt-0">
@@ -479,7 +481,7 @@ export default function App() {
                   <CheckCircle2 size={16} />
                   <span>Systemet er klart</span>
                 </div>
-                <p className="text-[10px] text-slate-400 text-right mt-1 font-mono">v2.4</p>
+                <p className="text-[10px] text-slate-400 text-right mt-1 font-mono">v2.5</p>
               </div>
             </div>
   
@@ -510,7 +512,7 @@ export default function App() {
                 <div className="flex justify-between items-end">
                   <div>
                     <h2 className="text-3xl font-bold tracking-tight mb-2">Velkommen tilbake</h2>
-                    <p className="text-slate-500">Last opp Z-rapport og bankterminal-avstemming for å starte importen.</p>
+                    <p className="text-slate-500">Last opp Z-rapport og bankterminal-avstemming for ï¿½ starte importen.</p>
                   </div>
                   <div className="flex gap-3">
                     {isKioskAuthenticated ? (
@@ -555,7 +557,7 @@ export default function App() {
 
                 <div className="space-y-6">
                   <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                    <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">Hvem gjør oppgjøret?</label>
+                    <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">Hvem gjï¿½r oppgjï¿½ret?</label>
                     <input 
                       type="text" 
                       value={ansattName}
@@ -732,7 +734,7 @@ export default function App() {
                           rel="noreferrer"
                           className="text-emerald-700 font-bold text-sm hover:underline flex items-center gap-1"
                         >
-                          Åpne regneark <ChevronRight size={16} />
+                          ï¿½pne regneark <ChevronRight size={16} />
                         </a>
                       </div>
                     )}
@@ -772,7 +774,7 @@ export default function App() {
                           <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                             <th className="px-6 py-4">Varenavn</th>
                             <th className="px-6 py-4">Antall</th>
-                            <th className="px-6 py-4">Beløp</th>
+                            <th className="px-6 py-4">Belï¿½p</th>
                             <th className="px-6 py-4">Konto</th>
                             <th className="px-6 py-4">MVA</th>
                             <th className="px-6 py-4">Kategori</th><th className="px-6 py-4"></th>
@@ -914,7 +916,7 @@ export default function App() {
                 ) : (
                   <div className="h-96 flex flex-col items-center justify-center text-slate-400 gap-4">
                     <FileText size={48} className="opacity-20" />
-                    <p>Ingen rapport valgt. Last opp en ny på Dashboard.</p>
+                    <p>Ingen rapport valgt. Last opp en ny pï¿½ Dashboard.</p>
                   </div>
                 )}
               </motion.div>
@@ -939,8 +941,8 @@ export default function App() {
                       onChange={(e) => setSelectedReportPeriod(e.target.value)}
                       className="w-full sm:w-64 px-4 py-2.5 rounded-xl border border-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 bg-white"
                     >
-                      <option disabled value="">Velg dato / måned...</option>
-                      <optgroup label="Månedlig">
+                      <option disabled value="">Velg dato / mï¿½ned...</option>
+                      <optgroup label="Mï¿½nedlig">
                         {monthlyOptions.map(([p]) => (
                           <option key={`monthly-${p}`} value={`monthly-${p}`}>{p}</option>
                         ))}
@@ -964,7 +966,7 @@ export default function App() {
                   <div key={period} className="space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="h-px flex-1 bg-slate-200"></div>
-                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">{isDaily ? 'Daglig: ' : 'Månedlig: '}{period}</span>
+                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">{isDaily ? 'Daglig: ' : 'Mï¿½nedlig: '}{period}</span>
                       <div className="h-px flex-1 bg-slate-200"></div>
                     </div>
 
@@ -1027,13 +1029,13 @@ export default function App() {
                   )) : (
                   <div className="h-96 flex flex-col items-center justify-center text-slate-400 gap-4">
                     <Download size={48} className="opacity-20" />
-                    <p>Ingen data tilgjengelig for rapportering ennå.</p>
+                    <p>Ingen data tilgjengelig for rapportering ennï¿½.</p>
                   </div>
                   );
                 })()}
               </motion.div>
             )}
-            {activeTab === 'mappings' && (
+            {activeTab === 'mappings' && isGoogleAuthenticated && (
               <motion.div 
                 key="mappings"
                 initial={{ opacity: 0, y: 10 }}
@@ -1041,19 +1043,19 @@ export default function App() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                   <div>
                     <h2 className="text-2xl font-bold tracking-tight">Mapping-regler</h2>
                     <p className="text-slate-500">Definer hvordan kassa-tekst oversettes til regnskapskontoer.</p>
                   </div>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors">
+                  <button className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors">
                     <Plus size={18} />
                     Ny Regel
                   </button>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                  <table className="w-full text-left border-collapse">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
                     <thead>
                       <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 bg-slate-50/50">
                         <th className="px-6 py-4">Tekst fra Kassa</th>
@@ -1171,7 +1173,7 @@ export default function App() {
                         </div>
                         <div>
                           <p className="font-bold">{item.dato}</p>
-                          <p className="text-sm text-slate-500">{item.linjer.length} varelinjer • {item.totalSalg.toLocaleString('no-NO')} kr</p>
+                          <p className="text-sm text-slate-500">{item.linjer.length} varelinjer ï¿½ {item.totalSalg.toLocaleString('no-NO')} kr</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -1188,7 +1190,7 @@ export default function App() {
                   )) : (
                     <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-4">
                       <History size={48} className="opacity-20" />
-                      <p>Ingen historikk ennå.</p>
+                      <p>Ingen historikk ennï¿½.</p>
                     </div>
                   )}
                 </div>
@@ -1241,7 +1243,7 @@ function SummaryBox({ label, value, color = "text-slate-900" }: { label: string,
 function StatusBadge({ status }: { status: 'ok' | 'warning' | 'error' }) {
   const configs = {
     ok: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Godkjent' },
-    warning: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Sjekk påkrevd' },
+    warning: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Sjekk pï¿½krevd' },
     error: { bg: 'bg-red-50', text: 'text-red-700', label: 'Feil i data' }
   };
   const config = configs[status];
@@ -1251,6 +1253,7 @@ function StatusBadge({ status }: { status: 'ok' | 'warning' | 'error' }) {
     </span>
   );
 }
+
 
 
 
