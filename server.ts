@@ -31,7 +31,7 @@ async function initFirebase() {
 }
 
 const app = express();
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 const appUrl = process.env.APP_URL || `http://localhost:${PORT}`;
 
