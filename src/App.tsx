@@ -438,11 +438,14 @@ export default function App() {
         </nav>
 
         <div className="mt-auto flex flex-col gap-4">
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 relative">
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Status</p>
-            <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
-              <CheckCircle2 size={16} />
-              <span>Systemet er klart</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
+                <CheckCircle2 size={16} />
+                <span>Systemet er klart</span>
+              </div>
+              <p className="text-[10px] text-slate-400 text-right mt-1 font-mono">v2.3</p>
             </div>
           </div>
 
