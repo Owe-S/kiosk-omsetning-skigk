@@ -15,9 +15,51 @@ import {
   LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ZReportData, ZReportLine, MappingEntry } from './types';
+import { ZReportData, ZReportLine, MappingEntry, QAChecklist } from './types';
 import { DEFAULT_VARE_MAPPING } from './constants';
 import { processZReportImage } from './services/geminiService';
+
+const VALID_MVA_KODER = new Set(['Ingen', '15% (Kode 31)', '25% (Kode 3)']);
+
+function getValidationErrors(report: ZReportData): string[] {
+  const errors: string[] = [];
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(report.dato || '')) {
+    errors.push('Dato mangler eller har feil format (forventet YYYY-MM-DD).');
+  }
+
+  if (!Array.isArray(report.linjer) || report.linjer.length === 0) {
+    errors.push('Ingen varelinjer funnet.');
+    return errors;
+  }
+
+  report.linjer.forEach((line, idx) => {
+    const lineNumber = idx + 1;
+    if (!line.varenavn?.trim()) {
+      errors.push(`Linje ${lineNumber}: Varenavn mangler.`);
+    }
+    if (!Number.isFinite(line.antall) || line.antall <= 0) {
+      errors.push(`Linje ${lineNumber}: Antall må være større enn 0.`);
+    }
+    if (!Number.isFinite(line.beloep) || line.beloep < 0) {
+      errors.push(`Linje ${lineNumber}: Beløp kan ikke være negativt.`);
+    }
+    if (!line.konto?.trim()) {
+      errors.push(`Linje ${lineNumber}: Konto mangler.`);
+    }
+    if (!VALID_MVA_KODER.has(line.mvaKode)) {
+      errors.push(`Linje ${lineNumber}: Ugyldig MVA-kode.`);
+    }
+  });
+
+  return errors;
+}
+
+const defaultChecklist: QAChecklist = {
+  checkedAgainstReceipts: false,
+  checkedPaymentTotals: false,
+  checkedUnknownItems: false,
+};
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'details' | 'mappings' | 'history' | 'reports'>('dashboard');
@@ -47,6 +89,8 @@ export default function App() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isSavingToSheets, setIsSavingToSheets] = useState(false);
   const [lastSpreadsheetId, setLastSpreadsheetId] = useState<string | null>(null);
+  const [qaChecklist, setQaChecklist] = useState<QAChecklist>(defaultChecklist);
+  const [qaComment, setQaComment] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -124,12 +168,43 @@ export default function App() {
 
   const handleSaveToSheets = async () => {
     if (!reportData || (!isGoogleAuthenticated && !isKioskAuthenticated)) return;
+
+    const validationErrors = getValidationErrors(reportData);
+    if (validationErrors.length > 0) {
+      alert(`Kan ikke godkjenne: ${validationErrors[0]}`);
+      return;
+    }
+
+    const checklistComplete = Object.values(qaChecklist).every(Boolean);
+    if (!checklistComplete) {
+      alert('Kan ikke godkjenne: Alle kontrollpunkter må bekreftes.');
+      return;
+    }
+
+    if (reportData.differanse !== 0 && !qaComment.trim()) {
+      alert('Kan ikke godkjenne: Legg inn kommentar når differansen ikke er 0.');
+      return;
+    }
+
+    const savePayload = {
+      ...reportData,
+      ansatt: reportData.ansatt || kioskUser?.name || ansattName || 'Ukjent',
+      scanMetadata: reportData.scanMetadata || {
+        scannedByName: kioskUser?.name || ansattName || 'Ukjent',
+        scannedByPhone: kioskUser?.phone || '',
+        scannedAt: new Date().toISOString(),
+        authType: isKioskAuthenticated ? 'kiosk' : 'admin',
+      },
+      qaChecklist,
+      qaComment: qaComment.trim(),
+    };
+
     setIsSavingToSheets(true);
     try {
       const res = await fetch('/api/sheets/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportData })
+        body: JSON.stringify({ reportData: savePayload })
       });
       const data = await res.json();
       if (res.ok) {
@@ -259,7 +334,19 @@ export default function App() {
     setError(null);
     try {
       const data = await processZReportImage(selectedImages);
-      const dataWithAnsatt = { ...data, ansatt: ansattName || "Ukjent" };
+      const scannerName = kioskUser?.name || ansattName || 'Ukjent';
+      const dataWithAnsatt = {
+        ...data,
+        ansatt: scannerName,
+        scanMetadata: {
+          scannedByName: scannerName,
+          scannedByPhone: kioskUser?.phone || '',
+          scannedAt: new Date().toISOString(),
+          authType: isKioskAuthenticated ? 'kiosk' as const : 'admin' as const,
+        },
+      };
+      setQaChecklist(defaultChecklist);
+      setQaComment('');
       setReportData(dataWithAnsatt);
       setHistory(prev => [dataWithAnsatt, ...prev]);
       setActiveTab('details');
@@ -319,6 +406,17 @@ export default function App() {
     setReportData(updatedReport);
     setHistory(prev => prev.map(r => r.dato === reportData.dato ? updatedReport : r));
   };
+
+  const currentValidationErrors = reportData ? getValidationErrors(reportData) : [];
+  const checklistComplete = Object.values(qaChecklist).every(Boolean);
+  const needsDifferanseComment = !!reportData && reportData.differanse !== 0 && !qaComment.trim();
+  const canApprove =
+    !!reportData &&
+    (isGoogleAuthenticated || isKioskAuthenticated) &&
+    !isSavingToSheets &&
+    currentValidationErrors.length === 0 &&
+    checklistComplete &&
+    !needsDifferanseComment;
 
   const exportToCSV = () => {
     if (!reportData) return;
@@ -564,8 +662,14 @@ export default function App() {
                       value={ansattName}
                       onChange={(e) => setAnsattName(e.target.value)}
                       placeholder="Skriv navnet ditt her..."
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      disabled={isKioskAuthenticated}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all disabled:opacity-70"
                     />
+                    {isKioskAuthenticated && kioskUser && (
+                      <p className="text-xs text-slate-500">
+                        Ansattnavn styres av innlogging: {kioskUser.name} ({kioskUser.phone})
+                      </p>
+                    )}
                   </div>
 
                   <div 
@@ -710,7 +814,7 @@ export default function App() {
                         </button>
                         <button 
                           onClick={handleSaveToSheets}
-                          disabled={(!isGoogleAuthenticated && !isKioskAuthenticated) || isSavingToSheets}
+                          disabled={!canApprove}
                           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-lg shadow-emerald-100"
                         >
                           {isSavingToSheets ? (
@@ -722,6 +826,75 @@ export default function App() {
                         </button>
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                        <h3 className="font-bold text-slate-800">Skannebevis</h3>
+                        <div className="text-sm text-slate-600 space-y-1">
+                          <p><span className="font-semibold">Ansatt:</span> {reportData.scanMetadata?.scannedByName || reportData.ansatt || 'Ukjent'}</p>
+                          <p><span className="font-semibold">Mobil:</span> {reportData.scanMetadata?.scannedByPhone || kioskUser?.phone || 'Ikke registrert'}</p>
+                          <p><span className="font-semibold">Innlogging:</span> {reportData.scanMetadata?.authType === 'kiosk' ? 'Ansatt' : 'Admin'}</p>
+                          <p><span className="font-semibold">Scannet:</span> {reportData.scanMetadata?.scannedAt ? new Date(reportData.scanMetadata.scannedAt).toLocaleString('no-NO') : 'Ikke registrert'}</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                        <h3 className="font-bold text-slate-800">Kvalitetskontroll før godkjenning</h3>
+                        <label className="flex items-start gap-3 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={qaChecklist.checkedAgainstReceipts}
+                            onChange={(e) => setQaChecklist(prev => ({ ...prev, checkedAgainstReceipts: e.target.checked }))}
+                            className="mt-0.5"
+                            disabled={!!lastSpreadsheetId}
+                          />
+                          Tallene er kontrollert mot Z-rapport/bankterminal.
+                        </label>
+                        <label className="flex items-start gap-3 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={qaChecklist.checkedPaymentTotals}
+                            onChange={(e) => setQaChecklist(prev => ({ ...prev, checkedPaymentTotals: e.target.checked }))}
+                            className="mt-0.5"
+                            disabled={!!lastSpreadsheetId}
+                          />
+                          Total betaling og total salg er kontrollert.
+                        </label>
+                        <label className="flex items-start gap-3 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={qaChecklist.checkedUnknownItems}
+                            onChange={(e) => setQaChecklist(prev => ({ ...prev, checkedUnknownItems: e.target.checked }))}
+                            className="mt-0.5"
+                            disabled={!!lastSpreadsheetId}
+                          />
+                          Ukjente/mistenkelige linjer er manuelt sjekket.
+                        </label>
+                        <textarea
+                          value={qaComment}
+                          onChange={(e) => setQaComment(e.target.value)}
+                          placeholder="Kommentar (obligatorisk ved differanse)."
+                          disabled={!!lastSpreadsheetId}
+                          className="w-full min-h-24 px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-70"
+                        />
+                        {needsDifferanseComment && (
+                          <p className="text-xs font-semibold text-amber-700">Differanse er ikke 0. Legg inn kommentar før godkjenning.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {(currentValidationErrors.length > 0 || !checklistComplete) && !lastSpreadsheetId && (
+                      <div className="bg-red-50 border border-red-200 p-4 rounded-xl flex gap-3">
+                        <AlertCircle className="text-red-600 shrink-0" size={20} />
+                        <div className="space-y-2 text-sm text-red-800">
+                          <p className="font-semibold">Godkjenning er blokkert til følgende er rettet:</p>
+                          {currentValidationErrors.map((err, idx) => (
+                            <p key={idx}>- {err}</p>
+                          ))}
+                          {!checklistComplete && <p>- Alle kontrollpunkter må krysses av.</p>}
+                        </div>
+                      </div>
+                    )}
 
                     {lastSpreadsheetId && (
                       <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between">

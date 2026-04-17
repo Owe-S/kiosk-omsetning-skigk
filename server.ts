@@ -11,6 +11,66 @@ import fs from 'fs';
 dotenv.config();
 
 let db: any = null;
+const ALLOWED_MVA_CODES = new Set(['Ingen', '15% (Kode 31)', '25% (Kode 3)']);
+
+function validateReportData(reportData: any) {
+  const errors: string[] = [];
+
+  if (!reportData || typeof reportData !== 'object') {
+    return ['Mangler reportData.'];
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(reportData.dato || ''))) {
+    errors.push('Dato mangler eller har feil format (YYYY-MM-DD).');
+  }
+
+  if (!reportData.ansatt || !String(reportData.ansatt).trim()) {
+    errors.push('Ansattnavn mangler.');
+  }
+
+  const scanMeta = reportData.scanMetadata;
+  if (!scanMeta || !String(scanMeta.scannedByName || '').trim()) {
+    errors.push('Skannebevis mangler: scannedByName.');
+  }
+  if (!scanMeta || !String(scanMeta.scannedAt || '').trim()) {
+    errors.push('Skannebevis mangler: scannedAt.');
+  }
+
+  const checklist = reportData.qaChecklist;
+  if (!checklist || Object.values(checklist).some(v => v !== true)) {
+    errors.push('Kvalitetskontroll er ikke fullført.');
+  }
+
+  if (Number(reportData.differanse || 0) !== 0 && !String(reportData.qaComment || '').trim()) {
+    errors.push('Kommentar er obligatorisk når differansen ikke er 0.');
+  }
+
+  if (!Array.isArray(reportData.linjer) || reportData.linjer.length === 0) {
+    errors.push('Ingen varelinjer mottatt.');
+    return errors;
+  }
+
+  reportData.linjer.forEach((line: any, idx: number) => {
+    const lineNumber = idx + 1;
+    if (!String(line.varenavn || '').trim()) {
+      errors.push(`Linje ${lineNumber}: varenavn mangler.`);
+    }
+    if (!Number.isFinite(Number(line.antall)) || Number(line.antall) <= 0) {
+      errors.push(`Linje ${lineNumber}: antall må være større enn 0.`);
+    }
+    if (!Number.isFinite(Number(line.beloep)) || Number(line.beloep) < 0) {
+      errors.push(`Linje ${lineNumber}: beløp kan ikke være negativt.`);
+    }
+    if (!String(line.konto || '').trim()) {
+      errors.push(`Linje ${lineNumber}: konto mangler.`);
+    }
+    if (!ALLOWED_MVA_CODES.has(String(line.mvaKode || ''))) {
+      errors.push(`Linje ${lineNumber}: ugyldig MVA-kode.`);
+    }
+  });
+
+  return errors;
+}
 
 // Initialize Firebase Admin asynchronously
 async function initFirebase() {
@@ -165,7 +225,15 @@ app.post('/api/sheets/save', async (req, res) => {
     return res.status(401).json({ error: "Ingen Google-tilkobling funnet. En admin må logge inn med Google først." });
   }
 
-  const { reportData, folderName = "Kasse_Kiosk" } = req.body;
+  const { reportData } = req.body;
+  const validationErrors = validateReportData(reportData);
+  if (validationErrors.length > 0) {
+    return res.status(400).json({
+      error: validationErrors[0],
+      validationErrors,
+    });
+  }
+
   oauth2Client.setCredentials(tokens);
   
   const drive = google.drive({ version: 'v3', auth: oauth2Client });
@@ -233,7 +301,22 @@ app.post('/api/sheets/save', async (req, res) => {
         range: 'Sheet1!A1',
         valueInputOption: 'RAW',
         requestBody: {
-          values: [["Dato", "Ansatt", "Varenavn", "Antall", "Beløp", "Varegruppe", "Konto", "MVA-kode"]]
+          values: [[
+            "Dato",
+            "Ansatt",
+            "Mobil",
+            "Scannet tidspunkt",
+            "Innlogging",
+            "Kvalitetssjekk",
+            "Differanse",
+            "Differansekommentar",
+            "Varenavn",
+            "Antall",
+            "Beløp",
+            "Varegruppe",
+            "Konto",
+            "MVA-kode"
+          ]]
         }
       });
     }
@@ -242,6 +325,12 @@ app.post('/api/sheets/save', async (req, res) => {
     const values = reportData.linjer.map((l: any) => [
       reportData.dato,
       reportData.ansatt || "Ukjent",
+      reportData.scanMetadata?.scannedByPhone || "",
+      reportData.scanMetadata?.scannedAt || "",
+      reportData.scanMetadata?.authType || "",
+      "Ja",
+      reportData.differanse ?? 0,
+      reportData.qaComment || "",
       l.varenavn,
       l.antall,
       l.beloep,

@@ -28,6 +28,19 @@ export interface ZReportPayment {
   konto: string;
 }
 
+export interface QAChecklist {
+  checkedAgainstReceipts: boolean;
+  checkedPaymentTotals: boolean;
+  checkedUnknownItems: boolean;
+}
+
+export interface ScanMetadata {
+  scannedByName: string;
+  scannedByPhone?: string;
+  scannedAt: string;
+  authType: 'kiosk' | 'admin';
+}
+
 export interface ZReportData {
   dato: string;
   linjer: ZReportLine[];
@@ -44,4 +57,7 @@ export interface ZReportData {
   meldinger: string[];
   bilder?: string[];
   ansatt?: string;
+  scanMetadata?: ScanMetadata;
+  qaChecklist?: QAChecklist;
+  qaComment?: string;
 }
