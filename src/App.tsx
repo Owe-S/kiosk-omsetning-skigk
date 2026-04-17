@@ -29,6 +29,7 @@ export default function App() {
     const saved = localStorage.getItem('kiosk_mappings');
     return saved ? JSON.parse(saved) : DEFAULT_VARE_MAPPING;
   });
+  const [isMappingSaved, setIsMappingSaved] = useState(false);
 
   // Save mappings whenever they change
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function App() {
         setError(data.error);
       }
     } catch (err) {
-      setError("Kunne ikke logge inn. Prï¿½v igjen senere.");
+      setError("Kunne ikke logge inn. Prøv igjen senere.");
     } finally {
       setIsLoggingIn(false);
     }
@@ -147,8 +148,8 @@ export default function App() {
 
   const handleTripletexExport = () => {
     if (!reportData) return;
-    // Tripletex standard CSV format: Dato, Konto, Belï¿½p, MVA-kode, Beskrivelse
-    const headers = ["Dato", "Konto", "Belï¿½p", "MVA-kode", "Beskrivelse"];
+    // Tripletex standard CSV format: Dato, Konto, Beløp, MVA-kode, Beskrivelse
+    const headers = ["Dato", "Konto", "Beløp", "MVA-kode", "Beskrivelse"];
     const rows = reportData.linjer.map(l => [
       reportData.dato,
       l.konto,
@@ -265,7 +266,7 @@ export default function App() {
       setSelectedImages([]);
     } catch (err) {
       console.error("Error processing images:", err);
-      setError("Kunne ikke analysere bildene. Vennligst prï¿½v igjen med tydeligere bilder.");
+      setError("Kunne ikke analysere bildene. Vennligst prøv igjen med tydeligere bilder.");
     } finally {
       setIsUploading(false);
     }
@@ -321,7 +322,7 @@ export default function App() {
 
   const exportToCSV = () => {
     if (!reportData) return;
-    const headers = ["Dato", "Varenavn", "Antall", "Belï¿½p", "Varegruppe", "Konto", "MVA-kode"];
+    const headers = ["Dato", "Varenavn", "Antall", "Beløp", "Varegruppe", "Konto", "MVA-kode"];
     const rows = reportData.linjer.map(l => [
       reportData.dato,
       l.varenavn,
@@ -353,9 +354,9 @@ export default function App() {
               <FileText size={32} />
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">
-              Oppgjï¿½r - Kiosken,<br />Ski Golfklubb
+              Oppgjør - Kiosken,<br />Ski Golfklubb
             </h1>
-            <p className="mt-2 text-slate-500">Logg inn for ï¿½ starte dagsoppgjï¿½ret</p>
+            <p className="mt-2 text-slate-500">Logg inn for å starte dagsoppgjøret</p>
           </div>
 
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
@@ -449,7 +450,7 @@ export default function App() {
               active={activeTab === 'details'} 
               onClick={() => setActiveTab('details')}
               icon={<TableIcon size={20} className="md:w-5 md:h-5 w-4 h-4" />}
-              label="Dagsoppgjï¿½r"
+              label="Dagsoppgjør"
             />
             <NavItem 
               active={activeTab === 'history'} 
@@ -512,7 +513,7 @@ export default function App() {
                 <div className="flex justify-between items-end">
                   <div>
                     <h2 className="text-3xl font-bold tracking-tight mb-2">Velkommen tilbake</h2>
-                    <p className="text-slate-500">Last opp Z-rapport og bankterminal-avstemming for ï¿½ starte importen.</p>
+                    <p className="text-slate-500">Last opp Z-rapport og bankterminal-avstemming for å starte importen.</p>
                   </div>
                   <div className="flex gap-3">
                     {isKioskAuthenticated ? (
@@ -557,7 +558,7 @@ export default function App() {
 
                 <div className="space-y-6">
                   <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                    <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">Hvem gjï¿½r oppgjï¿½ret?</label>
+                    <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">Hvem gjør oppgjøret?</label>
                     <input 
                       type="text" 
                       value={ansattName}
@@ -734,7 +735,7 @@ export default function App() {
                           rel="noreferrer"
                           className="text-emerald-700 font-bold text-sm hover:underline flex items-center gap-1"
                         >
-                          ï¿½pne regneark <ChevronRight size={16} />
+                          Åpne regneark <ChevronRight size={16} />
                         </a>
                       </div>
                     )}
@@ -774,7 +775,7 @@ export default function App() {
                           <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                             <th className="px-6 py-4">Varenavn</th>
                             <th className="px-6 py-4">Antall</th>
-                            <th className="px-6 py-4">Belï¿½p</th>
+                            <th className="px-6 py-4">Beløp</th>
                             <th className="px-6 py-4">Konto</th>
                             <th className="px-6 py-4">MVA</th>
                             <th className="px-6 py-4">Kategori</th><th className="px-6 py-4"></th>
@@ -916,7 +917,7 @@ export default function App() {
                 ) : (
                   <div className="h-96 flex flex-col items-center justify-center text-slate-400 gap-4">
                     <FileText size={48} className="opacity-20" />
-                    <p>Ingen rapport valgt. Last opp en ny pï¿½ Dashboard.</p>
+                    <p>Ingen rapport valgt. Last opp en ny på Dashboard.</p>
                   </div>
                 )}
               </motion.div>
@@ -941,8 +942,8 @@ export default function App() {
                       onChange={(e) => setSelectedReportPeriod(e.target.value)}
                       className="w-full sm:w-64 px-4 py-2.5 rounded-xl border border-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 bg-white"
                     >
-                      <option disabled value="">Velg dato / mï¿½ned...</option>
-                      <optgroup label="Mï¿½nedlig">
+                      <option disabled value="">Velg dato / måned...</option>
+                      <optgroup label="månedlig">
                         {monthlyOptions.map(([p]) => (
                           <option key={`monthly-${p}`} value={`monthly-${p}`}>{p}</option>
                         ))}
@@ -966,7 +967,7 @@ export default function App() {
                   <div key={period} className="space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="h-px flex-1 bg-slate-200"></div>
-                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">{isDaily ? 'Daglig: ' : 'Mï¿½nedlig: '}{period}</span>
+                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">{isDaily ? 'Daglig: ' : 'månedlig: '}{period}</span>
                       <div className="h-px flex-1 bg-slate-200"></div>
                     </div>
 
@@ -1029,7 +1030,7 @@ export default function App() {
                   )) : (
                   <div className="h-96 flex flex-col items-center justify-center text-slate-400 gap-4">
                     <Download size={48} className="opacity-20" />
-                    <p>Ingen data tilgjengelig for rapportering ennï¿½.</p>
+                    <p>Ingen data tilgjengelig for rapportering ennå.</p>
                   </div>
                   );
                 })()}
@@ -1048,21 +1049,37 @@ export default function App() {
                     <h2 className="text-2xl font-bold tracking-tight">Mapping-regler</h2>
                     <p className="text-slate-500">Definer hvordan kassa-tekst oversettes til regnskapskontoer.</p>
                   </div>
-                  <button className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors">
-                    <Plus size={18} />
-                    Ny Regel
-                  </button>
+                  <div className="flex flex-row gap-3 w-full sm:w-auto">
+                    <button 
+                      onClick={() => {
+                        localStorage.setItem('kiosk_mappings', JSON.stringify(mappings));
+                        setIsMappingSaved(true);
+                        setTimeout(() => setIsMappingSaved(false), 2000);
+                      }}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                      {isMappingSaved ? <CheckCircle2 size={18} className="text-emerald-600" /> : <Settings size={18} className="text-slate-400" />}
+                      {isMappingSaved ? "Lagret!" : "Lagre"}
+                    </button>
+                    <button 
+                      onClick={() => setMappings([...mappings, { kassaTekst: "Ny Regel", driftskategori: "Mangler Kat.", konto: "3000", mva: "25% (Kode 3)" }])}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
+                    >
+                      <Plus size={18} />
+                      Ny Regel
+                    </button>
+                  </div>
                 </div>
 
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[600px]">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                       <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 bg-slate-50/50">
-                        <th className="px-6 py-4">Tekst fra Kassa</th>
-                        <th className="px-6 py-4">Kategori (Drift)</th>
-                        <th className="px-6 py-4">Konto (Tripletex)</th>
-                        <th className="px-6 py-4">MVA Kode</th>
-                        <th className="px-6 py-4 text-right">Handlinger</th>
+                        <th className="px-6 py-4 whitespace-nowrap">Tekst fra Kassa</th>
+                        <th className="px-6 py-4 whitespace-nowrap">Kategori (Drift)</th>
+                        <th className="px-6 py-4 whitespace-nowrap">Konto (Tripletex)</th>
+                        <th className="px-6 py-4 whitespace-nowrap">MVA Kode</th>
+                        <th className="px-6 py-4 text-right whitespace-nowrap">Handlinger</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -1077,7 +1094,7 @@ export default function App() {
                                 newMappings[i].kassaTekst = e.target.value;
                                 setMappings(newMappings);
                               }}
-                              className="w-full px-2 py-1 font-medium border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent"
+                              className="w-full min-w-[250px] px-2 py-1 font-medium border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent"
                               placeholder="f.eks. Kaffe"
                             />
                           </td>
@@ -1090,7 +1107,7 @@ export default function App() {
                                 newMappings[i].driftskategori = e.target.value;
                                 setMappings(newMappings);
                               }}
-                              className="w-full px-2 py-1 bg-slate-100 rounded-md text-xs font-bold text-slate-600 uppercase border border-transparent hover:border-slate-300 focus:border-emerald-500 focus:bg-white outline-none transition-all"
+                              className="w-full min-w-[200px] px-2 py-1 bg-slate-100 rounded-md text-xs font-bold text-slate-600 uppercase border border-transparent hover:border-slate-300 focus:border-emerald-500 focus:bg-white outline-none transition-all"
                             />
                           </td>
                           <td className="px-6 py-3">
@@ -1102,7 +1119,7 @@ export default function App() {
                                 newMappings[i].konto = e.target.value;
                                 setMappings(newMappings);
                               }}
-                              className="w-24 px-2 py-1 font-mono text-slate-500 text-sm border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent"
+                              className="w-24 min-w-[100px] px-2 py-1 font-mono text-slate-500 text-sm border border-transparent hover:border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded outline-none transition-all bg-transparent"
                             />
                           </td>
                           <td className="px-6 py-3">
@@ -1113,7 +1130,7 @@ export default function App() {
                                 newMappings[i].mva = e.target.value as "Ingen" | "12% (Kode 33)" | "15% (Kode 31)" | "25% (Kode 3)";
                                 setMappings(newMappings);
                               }}
-                              className="text-sm bg-transparent border border-transparent hover:border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 text-slate-600 transition-all"
+                              className="text-sm min-w-[150px] bg-transparent border border-transparent hover:border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded px-2 py-1 text-slate-600 transition-all"
                             >
                               <option value="Ingen">Ingen</option>
                               <option value="12% (Kode 33)">12% (Kode 33)</option>
@@ -1173,7 +1190,7 @@ export default function App() {
                         </div>
                         <div>
                           <p className="font-bold">{item.dato}</p>
-                          <p className="text-sm text-slate-500">{item.linjer.length} varelinjer ï¿½ {item.totalSalg.toLocaleString('no-NO')} kr</p>
+                          <p className="text-sm text-slate-500">{item.linjer.length} varelinjer á {item.totalSalg.toLocaleString('no-NO')} kr</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -1190,7 +1207,7 @@ export default function App() {
                   )) : (
                     <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-4">
                       <History size={48} className="opacity-20" />
-                      <p>Ingen historikk ennï¿½.</p>
+                      <p>Ingen historikk ennå.</p>
                     </div>
                   )}
                 </div>
@@ -1243,7 +1260,7 @@ function SummaryBox({ label, value, color = "text-slate-900" }: { label: string,
 function StatusBadge({ status }: { status: 'ok' | 'warning' | 'error' }) {
   const configs = {
     ok: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Godkjent' },
-    warning: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Sjekk pï¿½krevd' },
+    warning: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Sjekk påkrevd' },
     error: { bg: 'bg-red-50', text: 'text-red-700', label: 'Feil i data' }
   };
   const config = configs[status];
@@ -1253,6 +1270,7 @@ function StatusBadge({ status }: { status: 'ok' | 'warning' | 'error' }) {
     </span>
   );
 }
+
 
 
 
